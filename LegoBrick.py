@@ -16,7 +16,7 @@ class LegoBrick(object):
         # finds the start and end index for each row of faces
         for x in range(width * 5 + 1):
             if x > 0:
-                start = length * 5 * x
+                start = (length * 5 * x) + (25 * length)
                 end = start + ((length * 5) - 1)
 
         # cmds.select(stud_faces)
@@ -27,10 +27,13 @@ class LegoBrick(object):
     def select_edges(self, width, length):
         edge_faces = []
 
+        # start for bottom edges? 
+        # start = (length * 5 * x) + (25 * length * width) + (55 * length)
+        
         # finds the start and end index for each row of faces
         for x in range(width * 5 + 1):
             if x > 0:
-                start = length * 5 * x
+                start = (length * 5 * x) + (25 * length)
                 end = start + ((length * 5) - 1)
 
                 if x == 1 or x == width * 5:
