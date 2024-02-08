@@ -1,18 +1,24 @@
-from maya import cmds
-
+from maya import cmds 
 class LegoBrick(object):
     def __init__(self, length, width):
         self.brick = None
         self.length = length
         self.width = width
     
-    def create_brick(self, color, plate=False):
+    def create_brick(self):
         size_x = 0.8 * self.length
         size_y = 0.96
         size_z = 0.8 * self.width
 
         self.brick = cmds.polyCube(h=size_y, w=size_x, d=size_z, sx=5 * self.length, sy=6, sz=5 * self.width)
         self.create_studs()
+    
+    def move_brick(self, x, y, z): 
+        cmds.select(self.brick)
+        cmds.move(x, y, z)
+
+    def get_brick(self):
+        return self.brick[0]
     
     def select_inner_brick(self):
         inner_faces = []
@@ -72,5 +78,4 @@ class LegoBrick(object):
         stud_faces = self.select_studs()
 
         cmds.polyCircularizeFace()
-        cmds.scale(0.8, 1, 0.8)
-
+        #cmds.scale(0.8, 1, 0.8)
