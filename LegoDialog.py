@@ -5,7 +5,11 @@ import maya.OpenMayaUI as omui
 import maya.cmds as cmds
 import sys
 
+sys.path.append("C:\\Users\\abiga\\OneDrive\\Documents\\maya\\2024\\plug-ins\\maya_lego_plugin")
+
 import LegoBrick
+import importlib
+importlib.reload(LegoBrick)
 
 def maya_main_window():
     main_window_ptr = omui.MQtUtil.mainWindow()
@@ -46,7 +50,7 @@ class LegoDialog(QtWidgets.QDialog):
         self.create_connections()
     
     def create_widgets(self):
-        self.create_wall_btn = QtWidgets.QPushButton("Create Wall")
+        self.create_wall_btn = QtWidgets.QPushButton("Create Wally")
         
         self.height_sb = QtWidgets.QSpinBox()
         self.height_sb.setFixedWidth(80)
@@ -104,7 +108,7 @@ class LegoDialog(QtWidgets.QDialog):
                 print("testing")
                 for col in range(self.old_width, self.width):
                     print("test")
-                    brick = LegoBrick(2, 2)
+                    brick = LegoBrick.LegoBrick(2, 2)
                     brick.create_brick()
                     brick.move_brick(.16 * 10 * col, 0, 0)
                     curr_row.append(brick.get_brick())
@@ -121,34 +125,26 @@ class LegoDialog(QtWidgets.QDialog):
                     print("test 2")
                     curr_row = []
                     
-                    brick = LegoBrick(2, 2)
+                    brick = LegoBrick.LegoBrick(2, 2)
                     brick.create_brick()
                     brick.move_brick(0, .96 * row, 0)
                     curr_row.append(brick.get_brick())
                     
                 self.current_bricks.append(curr_row)
             else:
-                 # remove bricks
-      
-
                  selected = cmds.select(self.current_bricks[self.height + 1:self.old_height + 1][0])
                  cmds.delete()
-                 
                  
                  self.current_bricks = self.current_bricks[0:self.height + 1]
                  self.old_height = self.height
                     
         elif self.height >= self.old_height:
-            # add more rows
-            print("test")
             if self.width >= self.old_width: 
-                print("hello")
                 for row in range(self.old_height, self.height):
                     curr_row = []
-                    
-                    print("hi")
+  
                     for col in range(self.old_width, self.width):
-                        brick = LegoBrick(2, 2)
+                        brick = LegoBrick.LegoBrick(2, 2)
                         brick.create_brick()
                         brick.move_brick(.16 * 5 * col, .96 * row, 0)
                         curr_row.append(brick.get_brick())
