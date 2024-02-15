@@ -12,6 +12,7 @@ class LegoBrick(object):
 
         self.brick = cmds.polyCube(h=size_y, w=size_x, d=size_z, sx=5 * self.length, sy=6, sz=5 * self.width)
         self.create_studs()
+        self.create_inner_brick()
     
     def move_brick(self, x, y, z): 
         cmds.select(self.brick)
@@ -73,9 +74,11 @@ class LegoBrick(object):
     
     def create_inner_brick(self):
         inner_faces = self.select_inner_brick()
+        cmds.polyExtrudeFacet(ltz=-.8)
 
     def create_studs(self):
         stud_faces = self.select_studs()
 
         cmds.polyCircularizeFace()
         #cmds.scale(0.8, 1, 0.8)
+        cmds.polyExtrudeFacet(ltz=.16)
