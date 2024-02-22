@@ -5,12 +5,13 @@ class LegoBrick(object):
         self.length = length
         self.width = width
     
-    def create_brick(self):
+    def create_brick(self, name):
         size_x = 0.8 * self.length
         size_y = 0.96
         size_z = 0.8 * self.width
 
         self.brick = cmds.polyCube(h=size_y, w=size_x, d=size_z, sx=5 * self.length, sy=6, sz=5 * self.width)
+        self.brick = cmds.rename(name)
         self.create_studs()
         self.create_inner_brick()
     
@@ -19,7 +20,7 @@ class LegoBrick(object):
         cmds.move(x, y, z)
 
     def get_brick(self):
-        return self.brick[0]
+        return self.brick
     
     def select_inner_brick(self):
         inner_faces = []
@@ -31,7 +32,7 @@ class LegoBrick(object):
                 end = start + ((self.length * 5) - 1)
 
                 if x != 1 and x != self.width * 5:
-                    inner_faces.append('{0}.f[{1}:{2}]'.format(self.brick[0], start + 1, end - 1))
+                    inner_faces.append('{0}.f[{1}:{2}]'.format(self.brick, start + 1, end - 1))
         
         cmds.select(inner_faces)
         return inner_faces
@@ -46,10 +47,10 @@ class LegoBrick(object):
                 end = start + ((self.length * 5) - 1)
 
                 if x == 1 or x == self.width * 5:
-                    edge_faces.append('{0}.f[{1}:{2}]'.format(self.brick[0], start, end))
+                    edge_faces.append('{0}.f[{1}:{2}]'.format(self.brick, start, end))
                 else:
-                    edge_faces.append('{0}.f[{1}]'.format(self.brick[0], start))
-                    edge_faces.append('{0}.f[{1}]'.format(self.brick[0], end))
+                    edge_faces.append('{0}.f[{1}]'.format(self.brick, start))
+                    edge_faces.append('{0}.f[{1}]'.format(self.brick, end))
         
         cmds.select(edge_faces)
         return edge_faces
@@ -66,7 +67,7 @@ class LegoBrick(object):
                 
     
                 if x % 5 != 1 and x % 5 != 0 and y % 5 != 1 and y % 5 != 0:
-                    stud_faces.append('{0}.f[{1}]'.format(self.brick[0], start + (y - 1)))
+                    stud_faces.append('{0}.f[{1}]'.format(self.brick, start + (y - 1)))
         
         
         cmds.select(stud_faces)

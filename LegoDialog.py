@@ -67,7 +67,6 @@ class LegoDialog(QtWidgets.QDialog):
 
     def create_layouts(self):
        
-
         create_wall_layout = QtWidgets.QFormLayout()
         create_wall_layout.addRow("Height: ", self.height_sb)
         create_wall_layout.addRow("Width: ", self.width_sb)
@@ -99,11 +98,12 @@ class LegoDialog(QtWidgets.QDialog):
     def create_wall(self):
         self.create_wall_btn.hide()
         self.create_wall_frame.show()
+
         
         if len(self.current_bricks) == 0: 
             brick = LegoBrick.LegoBrick(2, 2)
-            brick.create_brick()
-
+            brick.create_brick("brick_2x2_")
+            self.current_group = cmds.group(brick.get_brick(), name="wall")
             self.current_bricks.append([brick.get_brick()])
 
         if self.height > self.old_height:
@@ -111,9 +111,10 @@ class LegoDialog(QtWidgets.QDialog):
                 curr_row = []
                 for col in range(0, self.width):
                     brick = LegoBrick.LegoBrick(2, 2)
-                    brick.create_brick()
+                    brick.create_brick("brick_2x2_")
                     brick.move_brick(.16 * 10 * col, .96 * row, 0)
                     curr_row.append(brick.get_brick())
+                    cmds.parent(brick.get_brick(), self.current_group)
 
                 self.current_bricks.append(curr_row)
 
@@ -121,10 +122,11 @@ class LegoDialog(QtWidgets.QDialog):
             for row in range(self.height):
                 for col in range(self.old_width, self.width):
                     brick = LegoBrick.LegoBrick(2, 2)
-                    brick.create_brick()
+                    brick.create_brick("brick_2x2_")
                     brick.move_brick(.16 * 10 * col, .96 * row, 0)
                     self.current_bricks[row].append(brick.get_brick())
-            
+                    cmds.parent(brick.get_brick(), self.current_group)
+
         elif self.height < self.old_height:
             selected = cmds.select(self.current_bricks[self.height:self.old_height][0])
             cmds.delete()
@@ -145,13 +147,16 @@ class LegoDialog(QtWidgets.QDialog):
         self.old_width = self.width
 
     def add_wall(self):
-        self.create_wall_frame.hide()
-        self.current_bricks = []
         self.old_width = 1
         self.old_height = 1
         self.height = 1
         self.width = 1
+        self.height_sb.setValue(1)
+        self.width_sb.setValue(1)
+        self.current_bricks = []
+        self.current_group = None
         self.create_wall_btn.show()
+        self.create_wall_frame.hide()
 
 if __name__ == "__main__":
     try: 
