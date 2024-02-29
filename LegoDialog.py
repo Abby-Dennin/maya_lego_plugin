@@ -4,12 +4,16 @@ from shiboken2 import wrapInstance
 import maya.OpenMayaUI as omui 
 import maya.cmds as cmds
 import sys
+import importlib
 
-sys.path.append("C:\\Users\\abiga\\OneDrive\\Documents\\maya\\2024\\plug-ins\\maya_lego_plugin")
+sys.path.append("C:\\Users\\abiga\\OneDrive\\Documents\\maya\\2024\\plug-ins")
 
 from maya_lego_plugin import LegoBrick
-import importlib
+from maya_lego_plugin import CustomSlider
+
+
 importlib.reload(LegoBrick)
+importlib.reload(CustomSlider)
 
 def maya_main_window():
     main_window_ptr = omui.MQtUtil.mainWindow()
@@ -61,6 +65,11 @@ class LegoDialog(QtWidgets.QDialog):
         self.width_sb.setMinimum(1)
         self.width_sb.setMaximum(100)
 
+        self.height_slider = CustomSlider.CustomSlider()
+        self.height_slider.setMinimum(1)
+        self.height_slider.setMaximum(100)
+
+
         #self.height_sb.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
 
         self.add_wall_btn = QtWidgets.QPushButton("Add Wall")
@@ -70,6 +79,7 @@ class LegoDialog(QtWidgets.QDialog):
         create_wall_layout = QtWidgets.QFormLayout()
         create_wall_layout.addRow("Height: ", self.height_sb)
         create_wall_layout.addRow("Width: ", self.width_sb)
+        create_wall_layout.addRow("Height: ", self.height_slider)
         create_wall_layout.addRow("", self.add_wall_btn)
 
         self.create_wall_frame = QtWidgets.QFrame()
