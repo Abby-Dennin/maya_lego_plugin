@@ -11,6 +11,7 @@ class CustomSlider(QtWidgets.QWidget):
         self.create_widgets()
         self.create_layout()
         self.create_connections()
+        
     def create_widgets(self):
         self.slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.numbox = QtWidgets.QSpinBox()
