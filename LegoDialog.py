@@ -42,6 +42,7 @@ class LegoDialog(QtWidgets.QDialog):
         self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
 
         self.current_bricks = []
+
         self.old_height = 1
         self.old_width = 1
         
@@ -66,10 +67,11 @@ class LegoDialog(QtWidgets.QDialog):
         self.height_sb.setMinimum(1)
         self.height_sb.setMaximum(100)
 
+        self.interlocking_cb = QtWidgets.QCheckBox()
+
         self.add_wall_btn = QtWidgets.QPushButton("Add Wall")
 
     def create_layouts(self):
-       
         width_layout = QtWidgets.QHBoxLayout()
         width_layout.addWidget(self.width_sb)
         width_layout.addWidget(self.width_slider)
@@ -79,20 +81,27 @@ class LegoDialog(QtWidgets.QDialog):
         height_layout.addWidget(self.height_slider)
 
         create_wall_layout = QtWidgets.QFormLayout()
-        create_wall_layout.addRow("Height: ", height_layout)
-        create_wall_layout.addRow("Width: ", width_layout)
-        create_wall_layout.addRow("", self.add_wall_btn)
+        create_wall_layout.addRow("Interlocking: ", self.interlocking_cb)
+        create_wall_layout.addRow("", self.create_wall_btn)
+
+        add_wall_layout = QtWidgets.QFormLayout()
+        add_wall_layout.addRow("Height: ", height_layout)
+        add_wall_layout.addRow("Width: ", width_layout)
+        add_wall_layout.addRow("", self.add_wall_btn)
 
         self.create_wall_frame = QtWidgets.QFrame()
         self.create_wall_frame.setLayout(create_wall_layout)
-        self.create_wall_frame.hide()
+
+        self.add_wall_frame = QtWidgets.QFrame()
+        self.add_wall_frame.setLayout(add_wall_layout)
+        self.add_wall_frame.hide()
     
         main_layout = QtWidgets.QVBoxLayout(self)
-        main_layout.addWidget(self.create_wall_btn)
         main_layout.addWidget(self.create_wall_frame)
+        main_layout.addWidget(self.add_wall_frame)
 
     def create_connections(self):
-        self.create_wall_btn.clicked.connect(self.create_interlocking_wall)
+        self.create_wall_btn.clicked.connect(self.set_wall_type)
         self.add_wall_btn.clicked.connect(self.add_wall)
         
         self.height_sb.valueChanged.connect(self.height_slider.setValue)
@@ -106,16 +115,31 @@ class LegoDialog(QtWidgets.QDialog):
     
     def set_height(self):
         self.height = self.height_sb.value()
-        self.create_wall()
+        
+        if self.interlocking_cb.isChecked():
+            self.create_interlocking_wall()
+        else:
+            self.create_wall()
     
     def set_width(self):
         self.width = self.width_sb.value()
-        self.create_interlocking_wall()
-    
-    def create_interlocking_wall(self):
-        self.create_wall_btn.hide()
-        self.create_wall_frame.show()
 
+        if self.interlocking_cb.isChecked():
+            self.create_interlocking_wall()
+        else:
+            self.create_wall()
+
+    def set_wall_type(self):
+        if self.interlocking_cb.isChecked():
+            self.create_interlocking_wall()
+        else: 
+            self.create_wall()
+
+    def create_interlocking_wall(self):
+        self.create_wall_frame.hide()
+        self.add_wall_frame.show()
+
+        
         if len(self.current_bricks) == 0:
             brick = LegoBrick.LegoBrick(2, 2)
             brick.create_brick("brick_2x2_")
@@ -171,8 +195,8 @@ class LegoDialog(QtWidgets.QDialog):
                             cmds.move_brick(.16 * 10 * col * 2, 0, 0)
 
 
-            elif self.width % 2 != 0:
-                if self.old_width % 2 == 0:
+            elif not width_even:
+                if old_width_even:
                     # if the old width was even and new width is odd, add 2x2
                     for col in range(self.old_width, self.width):
                         brick = LegoBrick.LegoBrick(2, 2)
@@ -180,19 +204,36 @@ class LegoDialog(QtWidgets.QDialog):
            
                         brick.move_brick(.16 * 10 * (col + 0.5), 0, 0)
                         self.current_bricks.append(brick.get_brick())
-                else:
-                    # if the old width was odd and the new width is odd, remove 2x2, add 2x4
-                    pass
+                elif self.width > 2:
+                    # if the old width was odd and the new width is odd, remove 2x2, add 2x4, add 2x2
+                    cmds.select(self.current_bricks[-1])
+                    self.current_bricks = self.current_bricks[0:len(self.current_bricks) - 1]
+                    cmds.delete()
+                    
+                    for col in range(self.old_width, self.width - 1):
+                        brick = LegoBrick.LegoBrick(4, 2)
+                        brick.create_brick("brick_2x4_")
+           
+                        brick.move_brick(.16 * 10 * col, 0, 0)
+                        self.current_bricks.append(brick.get_brick())
+                    
+                    brick = LegoBrick.LegoBrick(2, 2)
+                    brick.create_brick("brick_2x2_")
+           
+                    brick.move_brick(.16 * 10 * (col + 0.5), 0, 0)
+                    self.current_bricks.append(brick.get_brick())
 
 
-        # FOR ODD LAYER HEIGHT
-        elif self.height % 2 != 0:
-            # for now assuming one layer
+
+
+        # # FOR ODD LAYER HEIGHT
+        # elif self.height % 2 != 0:
+        #     # for now assuming one layer
             
 
-        # FOR EVEN LAYER HEIGHT            
-        else:
-            pass
+        # # FOR EVEN LAYER HEIGHT            
+        # else:
+        #     pass
 
 
 
@@ -201,8 +242,8 @@ class LegoDialog(QtWidgets.QDialog):
         self.old_height = self.height
 
     def create_wall(self):
-        self.create_wall_btn.hide()
-        self.create_wall_frame.show()
+        self.create_wall_frame.hide()
+        self.add_wall_frame.show()
         
         if len(self.current_bricks) == 0: 
             brick = LegoBrick.LegoBrick(2, 2)
@@ -264,8 +305,8 @@ class LegoDialog(QtWidgets.QDialog):
         self.brick_count = 1
         self.current_bricks = []
         self.current_group = None
-        self.create_wall_btn.show()
-        self.create_wall_frame.hide()
+        self.create_wall_frame.show()
+        self.add_wall_frame.hide()
 
 if __name__ == "__main__":
     try: 
