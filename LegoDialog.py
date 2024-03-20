@@ -9,11 +9,8 @@ import importlib
 sys.path.append("C:\\Users\\abiga\\OneDrive\\Documents\\maya\\2024\\plug-ins")
 
 from maya_lego_plugin import LegoBrick
-from maya_lego_plugin import CustomSlider
-
 
 importlib.reload(LegoBrick)
-importlib.reload(CustomSlider)
 
 def maya_main_window():
     main_window_ptr = omui.MQtUtil.mainWindow()
