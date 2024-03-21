@@ -9,8 +9,8 @@ from maya_lego_plugin import LegoColors
 importlib.reload(LegoColors)
 
 class LegoBrick(object):
-    def __init__(self, length, width):
-        self.brick = None
+    def __init__(self, length, width, brick=None):
+        self.brick = brick
         self.length = length
         self.width = width
         self.color = None
@@ -98,7 +98,6 @@ class LegoBrick(object):
     def set_random_color(self):
         lego_colors = LegoColors.LegoColors()
         self.color = lego_colors.get_random_color()
-        print(self.color)
 
         materials = cmds.ls(mat=True)
         sg = "{0}{1}".format(self.color['name'].replace(" ", "").replace("-", ""), "SG")
@@ -114,7 +113,7 @@ class LegoBrick(object):
         base_color_rgb = tuple(int(base_color_hex[i:i+2], 16) for i in (0, 2, 4))
 
         material, sg = self.create_shader(material_name, base_color_rgb)
-        print(sg)
+
         cmds.sets(self.brick, forceElement=sg)
     
     def create_shader(self, name, base_color):
