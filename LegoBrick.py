@@ -9,11 +9,12 @@ from maya_lego_plugin import LegoColors
 importlib.reload(LegoColors)
 
 class LegoBrick(object):
-    def __init__(self, length, width, brick=None):
+    def __init__(self, length, width, brick=None, color=None, rand_color=False):
         self.brick = brick
         self.length = length
         self.width = width
-        self.color = None
+        self.color = color
+        self.rand_color = rand_color
     
     def create_brick(self, name):
         size_x = 0.8 * self.length
@@ -24,8 +25,12 @@ class LegoBrick(object):
         self.brick = cmds.rename(name)
         self.create_studs()
         self.create_inner_brick()
-        self.set_random_color()
-    
+
+        if self.rand_color:
+            self.set_random_color()
+        elif not self.color == None:
+            self.set_color()
+ 
     def move_brick(self, x, y, z): 
         cmds.select(self.brick)
         cmds.move(x, y, z)
@@ -76,10 +81,8 @@ class LegoBrick(object):
                 start = (self.length * 5 * x) + (25 * self.length)
                 end = start + ((self.length * 5) - 1)
                 
-    
                 if x % 5 != 1 and x % 5 != 0 and y % 5 != 1 and y % 5 != 0:
                     stud_faces.append('{0}.f[{1}]'.format(self.brick, start + (y - 1)))
-        
         
         cmds.select(stud_faces)
         return stud_faces
@@ -95,6 +98,16 @@ class LegoBrick(object):
         #cmds.scale(0.8, 1, 0.8)
         cmds.polyExtrudeFacet(ltz=.16)
     
+    def set_color(self):
+ 
+        materials = cmds.ls(mat=True)
+        sg = "{0}{1}".format(self.color['name'].replace(" ", "").replace("-", ""), "SG")
+        
+        if self.color['name'].replace(" ", "").replace("-", "") in materials:
+               cmds.sets(self.brick, forceElement=sg)
+        else:
+            self.create_material()
+
     def set_random_color(self):
         lego_colors = LegoColors.LegoColors()
         self.color = lego_colors.get_random_color()
