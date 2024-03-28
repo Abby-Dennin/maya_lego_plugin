@@ -117,18 +117,11 @@ class CreateWallWidget(QtWidgets.QWidget):
             self.create_wall()
 
     def new_create_wall(self):
-        wall = [[' '] * self.width for _ in range(self.height)]  # Initialize wall with empty spaces
-
-        brick_symbols = {
-            1: '1',
-            2: '2',
-            3: '3',
-            4: '4',
-        }
+        wall = [[' '] * (self.width * 2) for _ in range(self.height)]  # Initialize wall with empty spaces
 
         def can_place_brick_of_length(i, j, length):
             # Check if the brick of 'length' can be placed starting from position (i, j)
-            if j + length <= self.width:
+            if j + length <= (self.width * 2):
                 for x in range(length):
                     if wall[i][j + x] != ' ':
                         return False
@@ -137,7 +130,6 @@ class CreateWallWidget(QtWidgets.QWidget):
 
         def place_brick_of_length(i, j, length):
             # Place the brick of 'length' starting from position (i, j)
-            symbol = brick_symbols[length]
             for x in range(length):
                 if x == 0: 
                     wall[i][j + x] = length
@@ -146,7 +138,7 @@ class CreateWallWidget(QtWidgets.QWidget):
                 
         def find_next_position():
             # Find the next empty position in the wall
-            positions = [(i, j) for i in range(self.height) for j in range(self.width)]
+            positions = [(i, j) for i in range(self.height) for j in range(self.width * 2)]
             random.shuffle(positions)
             for i, j in positions:
                 if wall[i][j] == ' ':
