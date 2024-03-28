@@ -9,6 +9,7 @@ import importlib
 import random
 
 sys.path.append("C:\\Users\\abiga\\OneDrive\\Documents\\maya\\2024\\plug-ins")
+sys.path.append("C:\\Users\\dennin.a\\OneDrive - Northeastern University\\Documents\\maya\\2024\\plug-ins")
 
 from maya_lego_plugin import LegoBrick
 
@@ -119,8 +120,8 @@ class CreateWallWidget(QtWidgets.QWidget):
         wall = [[' '] * self.width for _ in range(self.height)]  # Initialize wall with empty spaces
 
         brick_symbols = {
-            1: '1',  # Small brick (1x2)
-            2: '2',  # Regular brick (2x2)
+            1: '1',
+            2: '2',
             3: '3',
             4: '4',
         }
@@ -143,7 +144,6 @@ class CreateWallWidget(QtWidgets.QWidget):
                 else:
                     wall[i][j + x] = '/'
                 
-
         def find_next_position():
             # Find the next empty position in the wall
             positions = [(i, j) for i in range(self.height) for j in range(self.width)]
@@ -166,32 +166,30 @@ class CreateWallWidget(QtWidgets.QWidget):
             if can_place_brick_of_length(i, j, brick_length):
                 place_brick_of_length(i, j, brick_length)
 
-        # need to figure out spacing!!!!!
         col = 0
         for row in wall:
 
-            index = 0
-            print(row)
+            distance = 0
+
             for x in row:
                 if x != '/':
-                    brick = LegoBrick.LegoBrick(x, 2)
+                    brick = LegoBrick.LegoBrick(x, 2, rand_color=True)
                     brick.create_brick("brick_{0}x2_".format(x))
-                    print("index: {0}".format(index))
-                    print("x: {0}".format(x))
-                    brick.move_brick(.10 * (.16 * x) + (index * .16), .96 * col, 0)
-                    index = x + index
+                    
+                    bounding_box = cmds.xform(brick.get_brick(), q=1, bb=1, ws=1)
+                    x_min, y_min, z_min, x_max, y_max, z_max = bounding_box
+                    cmds.move(x_min, [brick.get_brick() + '.scalePivot', brick.get_brick() + '.rotatePivot'], x = 1, absolute = 1)
+                    cmds.move(y_min, [brick.get_brick() + '.scalePivot', brick.get_brick() + '.rotatePivot'], y=1, )
+                    
+                    brick.move_brick(x_min * -1, 0, 0)
+                    brick.move_brick((distance + (x_min * -1)), .96 * col, 0)
+                    cmds.xform(brick.get_brick(), cp = 1)
+
+                    distance = x_max + distance + (x_min * -1)
+
             col = col + 1
 
         return wall
-
-    # def display_filled_wall(wall):
-    #     for row in wall:
-    #         print(''.join(row))
-
-    # # Example usage
-    # n, m = 5, 5  # Dimensions of the wall
-    # filled_wall = fill_wall(n, m)
-    # display_filled_wall(filled_wall)
   
     def create_interlocking_wall(self):
         self.create_wall_frame.hide()
@@ -252,8 +250,6 @@ class CreateWallWidget(QtWidgets.QWidget):
                             cmds.move_brick(.16 * 10 * col, 0, 0)
                         
 
-
-
             elif not width_even:
                 if old_width_even:
                     # if the old width was even and new width is odd, add 2x2
@@ -294,8 +290,6 @@ class CreateWallWidget(QtWidgets.QWidget):
         # # FOR EVEN LAYER HEIGHT            
         # else:
         #     pass
-
-
 
 
         self.old_width = self.width

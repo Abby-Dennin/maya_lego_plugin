@@ -6,6 +6,7 @@ import sys
 import importlib
 
 sys.path.append("C:\\Users\\abiga\\OneDrive\\Documents\\maya\\2024\\plug-ins")
+sys.path.append("C:\\Users\\dennin.a\\OneDrive - Northeastern University\\Documents\\maya\\2024\\plug-ins")
 
 from maya_lego_plugin import LegoColors
 
