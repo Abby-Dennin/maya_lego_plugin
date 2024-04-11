@@ -22,36 +22,57 @@ class ColorPalette(QtWidgets.QWidget):
         self.colors = lego_colors.get_colors()
         self.color_btns = []
 
+        self.color_list = []
 
         self.create_widgets()
         self.create_layouts()
+        self.create_connections()
 
     def create_widgets(self):
+
+        self.color_dlg = QtWidgets.QColorDialog()
+        self.color_dlg.setOption(QtWidgets.QColorDialog.NoButtons, True)
+        self.color_dlg.setOption(QtWidgets.QColorDialog.DontUseNativeDialog, True)
+
+        index = 0
         for color in self.colors:
             base_color_hex = color['hex']
             base_color_rgb = tuple(int(base_color_hex[i:i+2], 16) for i in (0, 2, 4))
 
-            buttonStyle = "QPushButton{background-color: rgb(%s, %s, %s" % (base_color_rgb[0], base_color_rgb[1], base_color_rgb[2]) + "); }" 
+            self.color_dlg.setStandardColor(index, QtGui.QColor.fromRgb(base_color_rgb[0], base_color_rgb[1], base_color_rgb[2]))
+            index = index + 1
 
-            color_btn = QtWidgets.QPushButton()
-            color_btn.setToolTip(color['name'])
-            color_btn.setStyleSheet(buttonStyle)
-            
-            self.color_btns.append(color_btn)
-    
+            self.color_list.append({
+                "name": color['name'],
+                "hex": color['hex'],
+                "qcolor": QtGui.QColor.fromRgb(base_color_rgb[0], base_color_rgb[1], base_color_rgb[2])
+            })
+
     def create_layouts(self):
         main_layout = QtWidgets.QVBoxLayout(self)
-        color_layout = QtWidgets.QGridLayout()
-  
-        for i in range(0, 10):
-            for j in range(0, 10):
-                if ( i > 8 and j > 7):
-                    pass
-                else:
-                    color_layout.addWidget(self.color_btns[j + (i * 10)], i, j)
+        main_layout.addWidget(self.color_dlg)
+    
+    def create_connections(self):
+        self.color_dlg.currentColorChanged.connect(self.set_current_color)
 
-        main_layout.addLayout(color_layout)
- 
+    def set_visible(self, visible):
+        self.color_dlg.setVisible(visible)
+        print("hi")
+
+    def get_color(self):
+        return self.color_dlg.getColor()
+    
+    def get_color_list(self):
+        return self.color_list
+    
+    def set_current_color(self, color):
+        for color_dict in self.color_list:
+            if color_dict['qcolor'] == color:
+                print(color_dict['name'])
+                return color_dict
+
+
+
 
     
 

@@ -42,7 +42,7 @@ class LegoDialog(QtWidgets.QDialog):
         super(LegoDialog, self).__init__(parent)
 
         self.setWindowTitle("Lego Generator")
-        self.setMinimumSize(500, 500)
+        self.setMinimumSize(600, 600)
         self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
 
         self.create_widgets()
@@ -54,11 +54,11 @@ class LegoDialog(QtWidgets.QDialog):
         self.create_wall_wdg = CreateWallWidget.CreateWallWidget()
         self.color_palette_wdg = ColorPalette.ColorPalette()
 
-        self.create_wall_panel = CollapsiblePanel.CollapsiblePanel("Create Wall")
+        self.create_wall_panel = CollapsiblePanel.CollapsiblePanel("Create Wall", True)
         self.create_wall_panel.add_widget(self.create_wall_wdg)
 
-        self.color_palette_panel = CollapsiblePanel.CollapsiblePanel("Color Palette Test")
-        self.color_palette_panel.add_widget(self.color_palette_wdg)
+        # self.color_palette_panel = CollapsiblePanel.CollapsiblePanel("Color Palette Test")
+        # self.color_palette_panel.add_widget(self.color_palette_wdg)
 
     def create_layouts(self):
         self.body_layout = QtWidgets.QVBoxLayout(self.body_wdg)
@@ -67,7 +67,7 @@ class LegoDialog(QtWidgets.QDialog):
         self.body_layout.setAlignment(QtCore.Qt.AlignTop)
 
         self.body_layout.addWidget(self.create_wall_panel)
-        self.body_layout.addWidget(self.color_palette_panel)
+        #  self.body_layout.addWidget(self.color_palette_panel)
 
         self.body_scroll_area = QtWidgets.QScrollArea()
         self.body_scroll_area.setFrameShape(QtWidgets.QFrame.NoFrame)

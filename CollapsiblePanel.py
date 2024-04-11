@@ -12,7 +12,7 @@ class PanelHeader(QtWidgets.QWidget):
 
     clicked = QtCore.Signal()
 
-    def __init__(self, text, parent=None):
+    def __init__(self, text, expanded=False, parent=None):
         super(PanelHeader, self).__init__(parent)
 
         self.icon_label = QtWidgets.QLabel()
@@ -26,7 +26,7 @@ class PanelHeader(QtWidgets.QWidget):
         self.main_layout.addWidget(self.text_label)
 
         self.set_text(text)
-        self.set_expanded(False)
+        self.set_expanded(expanded)
 
     def set_text(self, text):
         self.text_label.setText("&nbsp;&nbsp;&nbsp;&nbsp;<b>{0}</b>".format(text))
@@ -47,10 +47,10 @@ class PanelHeader(QtWidgets.QWidget):
 
 class CollapsiblePanel(QtWidgets.QWidget):
 
-    def __init__(self, text, parent=None):
+    def __init__(self, text, expanded=False, parent=None):
         super(CollapsiblePanel, self).__init__(parent)
 
-        self.header_wdg = PanelHeader(text)
+        self.header_wdg = PanelHeader(text, expanded)
         self.header_wdg.clicked.connect(self.on_header_clicked)
         self.body_wdg = QtWidgets.QWidget()
 
@@ -63,7 +63,7 @@ class CollapsiblePanel(QtWidgets.QWidget):
         self.main_layout.addWidget(self.header_wdg)
         self.main_layout.addWidget(self.body_wdg)
 
-        self.set_expanded(False)
+        self.set_expanded(expanded)
     
     def add_widget(self, widget): 
         self.body_layout.addWidget(widget)

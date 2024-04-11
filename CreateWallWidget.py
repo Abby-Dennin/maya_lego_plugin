@@ -12,8 +12,12 @@ sys.path.append("C:\\Users\\abiga\\OneDrive\\Documents\\maya\\2024\\plug-ins")
 sys.path.append("C:\\Users\\dennin.a\\OneDrive - Northeastern University\\Documents\\maya\\2024\\plug-ins")
 
 from maya_lego_plugin import LegoBrick
+from maya_lego_plugin import LegoColors
+from maya_lego_plugin import ColorPalette
 
 importlib.reload(LegoBrick)
+importlib.reload(LegoColors)
+importlib.reload(ColorPalette)
 
 class CreateWallWidget(QtWidgets.QWidget):
 
@@ -27,6 +31,7 @@ class CreateWallWidget(QtWidgets.QWidget):
         self.width = 1
         self.brick_count = 1
 
+        self.colors = LegoColors.LegoColors().get_colors()
         self.create_widgets()
         self.create_layouts()
         self.create_connections()
@@ -46,6 +51,14 @@ class CreateWallWidget(QtWidgets.QWidget):
 
         self.interlocking_cb = QtWidgets.QCheckBox()
 
+        self.random_colors_rb = QtWidgets.QRadioButton("Random Colors")
+        self.select_color_rb = QtWidgets.QRadioButton("Select Color")
+        self.select_color_set_rb = QtWidgets.QRadioButton("Select Color Set")
+
+        self.randomize_bricks_cb = QtWidgets.QCheckBox("Random Bricks")
+
+        self.color_palette = ColorPalette.ColorPalette()
+
         self.add_wall_btn = QtWidgets.QPushButton("Add Wall")
         self.tester_btn = QtWidgets.QPushButton("Tester")
 
@@ -59,14 +72,22 @@ class CreateWallWidget(QtWidgets.QWidget):
         height_layout.addWidget(self.height_slider)
 
         create_wall_layout = QtWidgets.QFormLayout()
-        create_wall_layout.addRow("Interlocking: ", self.interlocking_cb)
         create_wall_layout.addRow("", self.create_wall_btn)
+
+        color_layout = QtWidgets.QHBoxLayout()
+        color_layout.addWidget(self.random_colors_rb)
+        color_layout.addWidget(self.select_color_rb)
+        color_layout.addWidget(self.select_color_set_rb)
+
+        self.color_palette.set_visible(False)
 
         add_wall_layout = QtWidgets.QFormLayout()
         add_wall_layout.addRow("Height: ", height_layout)
         add_wall_layout.addRow("Width: ", width_layout)
+        add_wall_layout.addRow("Colors: ", color_layout)
+        add_wall_layout.addRow("", self.color_palette)
+        add_wall_layout.addRow("", self.randomize_bricks_cb)
         add_wall_layout.addRow("", self.add_wall_btn)
-        add_wall_layout.addRow("", self.tester_btn)
 
         self.create_wall_frame = QtWidgets.QFrame()
         self.create_wall_frame.setLayout(create_wall_layout)
@@ -78,11 +99,11 @@ class CreateWallWidget(QtWidgets.QWidget):
         main_layout = QtWidgets.QVBoxLayout(self)
         main_layout.addWidget(self.create_wall_frame)
         main_layout.addWidget(self.add_wall_frame)
+        # main_layout.addWidget(color_palette)
 
     def create_connections(self):
-        self.create_wall_btn.clicked.connect(self.set_wall_type)
-        self.add_wall_btn.clicked.connect(self.add_wall)
-        
+        self.create_wall_btn.clicked.connect(self.create_wall)
+
         self.height_sb.valueChanged.connect(self.height_slider.setValue)
         self.height_slider.valueChanged.connect(self.height_sb.setValue)
 
@@ -92,8 +113,12 @@ class CreateWallWidget(QtWidgets.QWidget):
         self.height_sb.valueChanged.connect(self.set_height)
         self.width_sb.valueChanged.connect(self.set_width)
 
-        self.tester_btn.clicked.connect(self.new_create_wall)
+        self.random_colors_rb.toggled.connect(self.color_btn_handler)
+        self.select_color_rb.toggled.connect(self.color_btn_handler)
 
+        #self.tester_btn.clicked.connect(self.new_create_wall)
+        self.add_wall_btn.clicked.connect(self.add_wall)
+        
     def set_height(self):
         self.height = self.height_sb.value()
         
@@ -110,12 +135,21 @@ class CreateWallWidget(QtWidgets.QWidget):
         else:
             self.create_wall()
 
-    def set_wall_type(self):
-        if self.interlocking_cb.isChecked():
-            self.create_interlocking_wall()
-        else: 
-            self.create_wall()
+    def color_btn_handler(self):
+        if self.random_colors_rb.isChecked():
+            self.color_palette.set_visible(False)
+        elif self.select_color_rb.isChecked():
+            self.color_palette.set_visible(True)
 
+    def create_random_wall(self):
+        wall = [[' '] * self.width for _ in range(self.height)]  # Initialize wall with empty spaces
+
+        brick_symbols = {
+            1: '1',
+            2: '2',
+            3: '3',
+            4: '4',
+        }
     def new_create_wall(self):
         wall = [[' '] * (self.width * 2) for _ in range(self.height)]  # Initialize wall with empty spaces
 
@@ -135,6 +169,7 @@ class CreateWallWidget(QtWidgets.QWidget):
                     wall[i][j + x] = length
                 else:
                     wall[i][j + x] = '/'
+                
                 
         def find_next_position():
             # Find the next empty position in the wall
@@ -182,6 +217,7 @@ class CreateWallWidget(QtWidgets.QWidget):
             col = col + 1
 
         return wall
+
   
     def create_interlocking_wall(self):
         self.create_wall_frame.hide()
@@ -344,6 +380,19 @@ class CreateWallWidget(QtWidgets.QWidget):
         self.old_width = self.width
 
     def add_wall(self):
+        if self.randomize_bricks_cb.isChecked():
+            selected = []
+            
+            for row in range(0, self.height):
+                selected = self.current_bricks[row]
+                cmds.select(selected)
+                cmds.delete()
+
+            self.create_random_wall()
+
+        self.wall_reset()
+
+    def wall_reset(self):
         self.old_width = 1
         self.old_height = 1
         self.height = 1
