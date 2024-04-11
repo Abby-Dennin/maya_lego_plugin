@@ -4,13 +4,13 @@ import random
 import os
 import sys
 
-#sys.path.append("C:\\Users\\abiga\\OneDrive\\Documents\\maya\\2024\\plug-ins")
-sys.path.append("C:\\Users\\dennin.a\\OneDrive - Northeastern University\\Documents\\maya\\plug-ins")
+sys.path.append("C:\\Users\\abiga\\OneDrive\\Documents\\maya\\2024\\plug-ins")
+#sys.path.append("C:\\Users\\dennin.a\\OneDrive - Northeastern University\\Documents\\maya\\plug-ins")
 
 class LegoColors(object):
     def __init__(self):
-        #os.chdir("C:\\Users\\abiga\\OneDrive\\Documents\\maya\\2024\\plug-ins")
-        os.chdir("C:\\Users\\dennin.a\\OneDrive - Northeastern University\\Documents\\maya\\plug-ins")
+        os.chdir("C:\\Users\\abiga\\OneDrive\\Documents\\maya\\2024\\plug-ins")
+        #os.chdir("C:\\Users\\dennin.a\\OneDrive - Northeastern University\\Documents\\maya\\plug-ins")
 
         with open('maya_lego_plugin\\colors.csv', 'r') as file:
             csv_reader = csv.DictReader(file)

@@ -32,6 +32,7 @@ class CreateWallWidget(QtWidgets.QWidget):
         self.brick_count = 1
 
         self.colors = LegoColors.LegoColors().get_colors()
+        
         self.create_widgets()
         self.create_layouts()
         self.create_connections()
@@ -49,8 +50,6 @@ class CreateWallWidget(QtWidgets.QWidget):
         self.height_sb.setMinimum(1)
         self.height_sb.setMaximum(100)
 
-        self.interlocking_cb = QtWidgets.QCheckBox()
-
         self.random_colors_rb = QtWidgets.QRadioButton("Random Colors")
         self.select_color_rb = QtWidgets.QRadioButton("Select Color")
         self.select_color_set_rb = QtWidgets.QRadioButton("Select Color Set")
@@ -60,7 +59,6 @@ class CreateWallWidget(QtWidgets.QWidget):
         self.color_palette = ColorPalette.ColorPalette()
 
         self.add_wall_btn = QtWidgets.QPushButton("Add Wall")
-        self.tester_btn = QtWidgets.QPushButton("Tester")
 
     def create_layouts(self):
         width_layout = QtWidgets.QHBoxLayout()
@@ -99,7 +97,6 @@ class CreateWallWidget(QtWidgets.QWidget):
         main_layout = QtWidgets.QVBoxLayout(self)
         main_layout.addWidget(self.create_wall_frame)
         main_layout.addWidget(self.add_wall_frame)
-        # main_layout.addWidget(color_palette)
 
     def create_connections(self):
         self.create_wall_btn.clicked.connect(self.create_wall)
@@ -116,7 +113,6 @@ class CreateWallWidget(QtWidgets.QWidget):
         self.random_colors_rb.toggled.connect(self.color_btn_handler)
         self.select_color_rb.toggled.connect(self.color_btn_handler)
 
-        #self.tester_btn.clicked.connect(self.new_create_wall)
         self.add_wall_btn.clicked.connect(self.add_wall)
         
     def set_height(self):
@@ -141,16 +137,7 @@ class CreateWallWidget(QtWidgets.QWidget):
         elif self.select_color_rb.isChecked():
             self.color_palette.set_visible(True)
 
-    def create_random_wall(self):
-        wall = [[' '] * self.width for _ in range(self.height)]  # Initialize wall with empty spaces
-
-        brick_symbols = {
-            1: '1',
-            2: '2',
-            3: '3',
-            4: '4',
-        }
-    def new_create_wall(self):
+    def create_random_wall(self): 
         wall = [[' '] * (self.width * 2) for _ in range(self.height)]  # Initialize wall with empty spaces
 
         def can_place_brick_of_length(i, j, length):
@@ -218,111 +205,6 @@ class CreateWallWidget(QtWidgets.QWidget):
 
         return wall
 
-  
-    def create_interlocking_wall(self):
-        self.create_wall_frame.hide()
-        self.add_wall_frame.show()
-
-        if len(self.current_bricks) == 0:
-            brick = LegoBrick.LegoBrick(2, 2)
-            brick.create_brick("brick_2x2_")
-            self.current_bricks.append(brick.get_brick())
-        
-        width_increased = self.width > self.old_width
-        height_increased = self.height > self.old_height
-
-        old_width_even = self.old_width % 2 == 0
-        old_height_even = self.old_height % 2 == 0
-
-        width_even = self.width % 2 == 0
-        height_even = self.height % 2 == 0
-        
-
-        ######################################################
-        if width_increased: 
-            if width_even:
-                if old_width_even:
-                    #if not height_even:
-                    # OLD WIDTH: EVEN -> NEW WIDTH: EVEN, HEIGHT: ODD
-                    # Add 2 x 4s to fill in until it is at new width
-                    for col in range(self.old_width, self.width, 2):
-                        brick = LegoBrick.LegoBrick(4, 2)
-                        brick.create_brick("brick_2x4_")
-                        brick.move_brick(.16 * 10 * col, 0, 0)
-                        self.current_bricks.append(brick.get_brick())
-
-                    # else:
-                    #     # OLD WIDTH: EVEN -> NEW WIDTH: EVEN, HEIGHT: EVEN
-                    #     # Add 2x4s to fill it in?
-                    #     pass
-                            
-                else:
-                    if not height_even:
-                    # OLD WIDTH: ODD -> NEW WIDTH: EVEN, HEIGHT: ODD
-                    # Delete the 2x2 at the end, replace with 2x4 (and fill in necessary 2x4s)
-                        cmds.select(self.current_bricks[-1])
-                        self.current_bricks = self.current_bricks[0:len(self.current_bricks) - 1]
-                        cmds.delete()
-                        
-                        for col in range(self.old_width, self.width, 2):
-                            brick = LegoBrick.LegoBrick(4, 2)
-                            brick.create_brick("brick_2x4_")
-                            brick.move_brick(.16 * 10 * col, 0, 0)
-                            self.current_bricks.append(brick.get_brick())
-
-                    # OLD WIDTH: ODD -> NEW WIDTH: EVEN, HEIGHT: EVEN
-                    # Shift everything over 1 unit, replace first brick with 4x2?
-                    else:
-                        for col in range(1, self.width):
-                            tmp_brick = self.current_bricks[col]
-                            cmds.move_brick(.16 * 10 * col, 0, 0)
-                        
-
-            elif not width_even:
-                if old_width_even:
-                    # if the old width was even and new width is odd, add 2x2
-                    for col in range(self.old_width, self.width, 2):
-                        brick = LegoBrick.LegoBrick(2, 2)
-                        brick.create_brick("brick_2x2_")
-           
-                        brick.move_brick(.16 * 10 * (col + 0.5), 0, 0)
-                        self.current_bricks.append(brick.get_brick())
-                
-                elif self.width > 2:
-                    # if the old width was odd and the new width is odd, remove 2x2, add 2x4, add 2x2
-                    cmds.select(self.current_bricks[-1])
-                    self.current_bricks = self.current_bricks[0:len(self.current_bricks) - 1]
-                    cmds.delete()
-                    
-                    for col in range(self.old_width, self.width - 1):
-                        brick = LegoBrick.LegoBrick(4, 2)
-                        brick.create_brick("brick_2x4_")
-           
-                        brick.move_brick(.16 * 10 * col, 0, 0)
-                        self.current_bricks.append(brick.get_brick())
-                    
-                    brick = LegoBrick.LegoBrick(2, 2)
-                    brick.create_brick("brick_2x2_")
-           
-                    brick.move_brick(.16 * 10 * (col + 0.5), 0, 0)
-                    self.current_bricks.append(brick.get_brick())
-
-
-
-
-        # # FOR ODD LAYER HEIGHT
-        # elif self.height % 2 != 0:
-        #     # for now assuming one layer
-            
-
-        # # FOR EVEN LAYER HEIGHT            
-        # else:
-        #     pass
-
-
-        self.old_width = self.width
-        self.old_height = self.height
-
     def create_wall(self):
         self.create_wall_frame.hide()
         self.add_wall_frame.show()
@@ -388,6 +270,7 @@ class CreateWallWidget(QtWidgets.QWidget):
                 cmds.select(selected)
                 cmds.delete()
 
+            self.current_bricks = []
             self.create_random_wall()
 
         self.wall_reset()
