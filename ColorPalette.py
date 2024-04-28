@@ -24,6 +24,8 @@ class ColorPalette(QtWidgets.QWidget):
 
         self.color_list = []
 
+        self.curr_color = None
+
         self.create_widgets()
         self.create_layouts()
         self.create_connections()
@@ -57,7 +59,6 @@ class ColorPalette(QtWidgets.QWidget):
 
     def set_visible(self, visible):
         self.color_dlg.setVisible(visible)
-        print("hi")
 
     def get_color(self):
         return self.color_dlg.getColor()
@@ -69,8 +70,12 @@ class ColorPalette(QtWidgets.QWidget):
         for color_dict in self.color_list:
             if color_dict['qcolor'] == color:
                 print(color_dict['name'])
+                self.curr_color = color_dict
                 return color_dict
 
+    def get_curr_color(self):
+        return self.curr_color
+        
 
 
 

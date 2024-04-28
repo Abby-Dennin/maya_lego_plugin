@@ -32,7 +32,9 @@ class CreateWallWidget(QtWidgets.QWidget):
         self.brick_count = 1
 
         self.colors = LegoColors.LegoColors().get_colors()
-        
+
+        self.wall_in_progress = False
+
         self.create_widgets()
         self.create_layouts()
         self.create_connections()
@@ -49,6 +51,10 @@ class CreateWallWidget(QtWidgets.QWidget):
         self.height_sb = QtWidgets.QSpinBox()
         self.height_sb.setMinimum(1)
         self.height_sb.setMaximum(100)
+
+        self.progress_bar_label = QtWidgets.QLabel("Generating Wall")
+        self.progress_bar = QtWidgets.QProgressBar()
+        self.cancel_btn = QtWidgets.QPushButton("Cancel")
 
         self.random_colors_rb = QtWidgets.QRadioButton("Random Colors")
         self.select_color_rb = QtWidgets.QRadioButton("Select Color")
@@ -87,6 +93,11 @@ class CreateWallWidget(QtWidgets.QWidget):
         add_wall_layout.addRow("", self.randomize_bricks_cb)
         add_wall_layout.addRow("", self.add_wall_btn)
 
+        progress_layout = QtWidgets.QVBoxLayout()
+        progress_layout.addWidget(self.progress_bar_label)
+        progress_layout.addWidget(self.progress_bar)
+        progress_layout.addWidget(self.cancel_btn)
+
         self.create_wall_frame = QtWidgets.QFrame()
         self.create_wall_frame.setLayout(create_wall_layout)
 
@@ -94,9 +105,14 @@ class CreateWallWidget(QtWidgets.QWidget):
         self.add_wall_frame.setLayout(add_wall_layout)
         self.add_wall_frame.hide()
     
+        self.progress_frame = QtWidgets.QFrame()
+        self.progress_frame.setLayout(progress_layout)
+        self.progress_frame.hide()
+
         main_layout = QtWidgets.QVBoxLayout(self)
         main_layout.addWidget(self.create_wall_frame)
         main_layout.addWidget(self.add_wall_frame)
+        main_layout.addWidget(self.progress_frame)
 
     def create_connections(self):
         self.create_wall_btn.clicked.connect(self.create_wall)
@@ -114,22 +130,22 @@ class CreateWallWidget(QtWidgets.QWidget):
         self.select_color_rb.toggled.connect(self.color_btn_handler)
 
         self.add_wall_btn.clicked.connect(self.add_wall)
-        
+        self.cancel_btn.clicked.connect(self.cancel_progress)
+
+    def cancel_progress(self):
+        self.wall_in_progress = False
+
     def set_height(self):
+        self.height_sb.valueChanged.disconnect(self.set_height)
+        self.width_sb.valueChanged.disconnect(self.set_width)
         self.height = self.height_sb.value()
-        
-        if self.interlocking_cb.isChecked():
-            self.create_interlocking_wall()
-        else:
-            self.create_wall()
+        self.create_wall()
     
     def set_width(self):
+        self.height_sb.valueChanged.disconnect(self.set_height)
+        self.width_sb.valueChanged.disconnect(self.set_width)
         self.width = self.width_sb.value()
-
-        if self.interlocking_cb.isChecked():
-            self.create_interlocking_wall()
-        else:
-            self.create_wall()
+        self.create_wall()
 
     def color_btn_handler(self):
         if self.random_colors_rb.isChecked():
@@ -137,7 +153,8 @@ class CreateWallWidget(QtWidgets.QWidget):
         elif self.select_color_rb.isChecked():
             self.color_palette.set_visible(True)
 
-    def create_random_wall(self): 
+    def create_random_wall(self, color=None, randColor=True): 
+        self.progress_frame.show()
         wall = [[' '] * (self.width * 2) for _ in range(self.height)]  # Initialize wall with empty spaces
 
         def can_place_brick_of_length(i, j, length):
@@ -156,7 +173,6 @@ class CreateWallWidget(QtWidgets.QWidget):
                     wall[i][j + x] = length
                 else:
                     wall[i][j + x] = '/'
-                
                 
         def find_next_position():
             # Find the next empty position in the wall
@@ -181,13 +197,24 @@ class CreateWallWidget(QtWidgets.QWidget):
                 place_brick_of_length(i, j, brick_length)
 
         col = 0
+
+        bricks_to_add = self.height * self.width
+        self.progress_bar.setRange(0, bricks_to_add)
+        self.progress_bar.setValue(0)
+
+        self.wall_in_progress = True
+        progress = 0
+
         for row in wall:
 
             distance = 0
 
             for x in row:
                 if x != '/':
-                    brick = LegoBrick.LegoBrick(x, 2, rand_color=True)
+                    if not self.wall_in_progress:
+                        break
+                    
+                    brick = LegoBrick.LegoBrick(x, 2, color=color, rand_color=randColor)
                     brick.create_brick("brick_{0}x2_".format(x))
                     
                     bounding_box = cmds.xform(brick.get_brick(), q=1, bb=1, ws=1)
@@ -198,17 +225,30 @@ class CreateWallWidget(QtWidgets.QWidget):
                     brick.move_brick(x_min * -1, 0, 0)
                     brick.move_brick((distance + (x_min * -1)), .96 * col, 0)
                     cmds.xform(brick.get_brick(), cp = 1)
+                    cmds.parent(brick.get_brick(), self.current_group)
 
                     distance = x_max + distance + (x_min * -1)
+                    
+                    progress = progress + 1
+                    self.progress_bar.setValue(progress)
+                    QtCore.QCoreApplication.processEvents()
 
             col = col + 1
+
+        self.wall_in_progress = False
+        self.progress_frame.hide()
+        self.progress_bar.setValue(0)
 
         return wall
 
     def create_wall(self):
+        if self.wall_in_progress:
+            return
+        
         self.create_wall_frame.hide()
         self.add_wall_frame.show()
-        
+        self.progress_frame.show()
+
         if len(self.current_bricks) == 0: 
             brick = LegoBrick.LegoBrick(2, 2)
             brick.create_brick("brick_2x2_{0}".format(self.brick_count))
@@ -216,9 +256,20 @@ class CreateWallWidget(QtWidgets.QWidget):
             self.current_bricks.append([brick.get_brick()])
 
         if self.height > self.old_height:
+            bricks_to_add = (self.height - self.old_height) * self.width
+            self.progress_bar.setRange(0, bricks_to_add)
+            self.progress_bar.setValue(0)
+
+            self.wall_in_progress = True
+            progress = 0
+
             for row in range(self.old_height, self.height):
                 curr_row = []
                 for col in range(0, self.width):
+
+                    if not self.wall_in_progress:
+                        break
+
                     brick = LegoBrick.LegoBrick(2, 2)
                     self.brick_count = self.brick_count + 1
                     brick.create_brick("brick_2x2_{0}".format(self.brick_count))
@@ -226,11 +277,26 @@ class CreateWallWidget(QtWidgets.QWidget):
                     curr_row.append(brick.get_brick())
                     cmds.parent(brick.get_brick(), self.current_group)
 
+                    progress = progress + 1
+                    self.progress_bar.setValue(progress)
+                    QtCore.QCoreApplication.processEvents()
+
                 self.current_bricks.append(curr_row)
 
         elif self.width > self.old_width:
+            bricks_to_add = (self.width - self.old_width) * self.height
+            self.progress_bar.setRange(0, bricks_to_add)
+            self.progress_bar.setValue(0)
+
+            self.wall_in_progress = True
+            progress = 0
+
             for row in range(self.height):
                 for col in range(self.old_width, self.width):
+                    
+                    if not self.wall_in_progress:
+                        break
+                    
                     brick = LegoBrick.LegoBrick(2, 2)
                     self.brick_count = self.brick_count + 1
                     brick.create_brick("brick_2x2_{0}".format(self.brick_count))
@@ -238,28 +304,69 @@ class CreateWallWidget(QtWidgets.QWidget):
                     self.current_bricks[row].append(brick.get_brick())
                     cmds.parent(brick.get_brick(), self.current_group)
 
+                    progress = progress + 1
+                    self.progress_bar.setValue(progress)
+                    QtCore.QCoreApplication.processEvents()
+
         elif self.height < self.old_height:
+            bricks_to_remove = (self.old_height - self.height) * self.width
+            self.progress_bar.setRange(0, bricks_to_remove)
+            self.progress_bar.setValue(0)
+
+            self.wall_in_progress = True
+            progress = 0
+        
             for row in range(self.height, self.old_height):
+                
+                if not self.wall_in_progress:
+                    break
+                    
                 selected = self.current_bricks[row]
                 cmds.select(selected)
                 self.brick_count = self.brick_count - len(selected)
                 cmds.delete()
+
+                progress = progress + 1
+                self.progress_bar.setValue(progress)
+                QtCore.QCoreApplication.processEvents()
             
             self.current_bricks = self.current_bricks[0:self.height]
 
         elif self.width < self.old_width:
+            bricks_to_remove = (self.old_width - self.width) * self.height
+            self.progress_bar.setRange(0, bricks_to_remove)
+            self.progress_bar.setValue(0)
+
+            self.wall_in_progress = True
+            progress = 0
+        
             selected = []
             for row in range(self.height):
                 for col in range(self.old_width, self.width, -1):
+                    
+                    if not self.wall_in_progress:
+                        break
+                    
                     selected = self.current_bricks[row][col - 1]
                     
                     cmds.select(selected)
                     self.brick_count = self.brick_count - len(selected)
                     cmds.delete()
                     self.current_bricks[row] = self.current_bricks[row][0:col - 1]
+                    
+                    progress = progress + 1
+                    self.progress_bar.setValue(progress)
+                    QtCore.QCoreApplication.processEvents()
 
         self.old_height = self.height
         self.old_width = self.width
+
+        self.height_sb.valueChanged.connect(self.set_height)
+        self.width_sb.valueChanged.connect(self.set_width)
+
+        self.wall_in_progress = False
+        self.progress_frame.hide()
+        self.progress_bar.setValue(0)
 
     def add_wall(self):
         if self.randomize_bricks_cb.isChecked():
@@ -271,18 +378,22 @@ class CreateWallWidget(QtWidgets.QWidget):
                 cmds.delete()
 
             self.current_bricks = []
-            self.create_random_wall()
+
+            if self.select_color_rb.isChecked():
+                self.create_random_wall(self.color_palette.get_curr_color(), False)
+            else:
+                self.create_random_wall()
 
         self.wall_reset()
 
     def wall_reset(self):
-        self.old_width = 1
-        self.old_height = 1
-        self.height = 1
-        self.width = 1
-        self.height_sb.setValue(1)
-        self.width_sb.setValue(1)
-        self.brick_count = 1
+        self.old_width = 0
+        self.old_height = 0
+        self.height = 0
+        self.width = 0
+        self.height_sb.setValue(0)
+        self.width_sb.setValue(0)
+        self.brick_count = 0
         self.current_bricks = []
         self.current_group = None
         self.create_wall_frame.show()
